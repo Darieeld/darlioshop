@@ -1,63 +1,114 @@
 ---
-const { title, price, img_url, slug } = Astro.props;
+const { title, price, img_url, slug, checkout_url = "#" } = Astro.props;
 ---
 
-<a href={`/juegos/${slug}`} class="card-link">
-  <article class="game-card">
+<article class="game-card">
+  <!-- ENLACE A LA WIKI (Imagen e Info) -->
+  <a href={`/juegos/${slug}`} class="wiki-link">
     <div class="image-container">
       <img src={img_url} alt={title} class="game-img" loading="lazy" />
     </div>
     <div class="info">
       <h3>{title}</h3>
       <p class="price">${price ? price.toFixed(2) : "0.00"}</p>
-      <button class="buy-btn">COMPRAR KEY</button>
     </div>
-  </article>
-</a>
+  </a>
+
+  <!-- BOTÓN DE COMPRA INDEPENDIENTE -->
+  <div class="actions">
+    <a href={checkout_url} class="buy-btn">
+      COMPRAR KEY
+    </a>
+  </div>
+</article>
 
 <style>
-  .card-link { text-decoration: none; color: inherit; display: block; width: 100%; }
-  
   .game-card {
     background-color: #111821;
-    border: 2px solid transparent;
     border-radius: 8px;
     overflow: hidden;
-    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     height: 100%;
+    /* 1. Recuperamos el borde (sutil por defecto) */
+    border: 2px solid rgba(124, 77, 255, 0.1); 
+    transition: all 0.3s ease;
   }
 
+  /* 2. El borde se ilumina al pasar el mouse por CUALQUIER parte de la card */
   .game-card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
     border-color: #7c4dff; 
-    box-shadow: 0 10px 20px rgba(124, 77, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(124, 77, 255, 0.3);
   }
 
-  .image-container { width: 100%; aspect-ratio: 2/3; overflow: hidden; }
-  .game-img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+  .wiki-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
 
-  .info { padding: 1rem; text-align: center; display: flex; flex-direction: column; gap: 0.5rem; }
+  .image-container { 
+    width: 100%; 
+    aspect-ratio: 2/3; 
+    overflow: hidden; 
+    /* Quitamos bordes redondeados internos para que encajen con el padre */
+  }
+  
+  .game-img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  /* Zoom suave en la imagen al pasar por la zona de wiki */
+  .wiki-link:hover .game-img {
+    transform: scale(1.05);
+  }
+
+  .info { 
+    padding: 1.2rem 1rem; 
+    text-align: center; 
+  }
   
   h3 { 
-    font-family: 'Inter', sans-serif; /* Usamos Inter para que se lea bien el título */
     font-size: 1rem; 
-    font-weight: 700; 
-    color: white;
-    margin: 0;
+    margin: 0; 
+    color: white; 
+    font-family: 'Inter', sans-serif;
   }
 
-  .price { color: #2de29d; font-size: 1.2rem; font-weight: 800; }
+  .price { 
+    color: #2de29d; 
+    font-size: 1.3rem; 
+    font-weight: 800; 
+    margin-top: 0.5rem;
+  }
+
+  .actions {
+    padding: 0 1rem 1.2rem 1rem;
+    margin-top: auto; /* Empuja el botón siempre al fondo */
+  }
 
   .buy-btn {
+    display: block;
     background-color: #5e35b1;
     color: white;
-    border: none;
-    padding: 0.5rem;
-    border-radius: 4px;
+    text-decoration: none;
+    text-align: center;
+    padding: 0.8rem;
+    border-radius: 6px;
     font-weight: bold;
-    font-size: 0.7rem;
-    cursor: pointer;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+
+  /* 3. El botón brilla de forma independiente cuando te pones encima */
+  .buy-btn:hover {
+    background-color: #7c4dff;
+    box-shadow: 0 0 15px rgba(124, 77, 255, 0.6);
+    transform: scale(1.02);
   }
 </style>
