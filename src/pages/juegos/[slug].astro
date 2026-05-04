@@ -1,0 +1,189 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { createClient } from '@supabase/supabase-js';
+
+// 1. FUNCIÓN DE RUTA ESTÁTICA (Indispensable para que Astro genere las páginas)
+export async function getStaticPaths() {
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  );
+  
+  const { data: juegos } = await supabase.from('Games').select('slug');
+  
+  return (juegos || []).map((juego) => ({
+    params: { slug: juego.slug },
+  }));
+}
+
+// 2. RECOGIDA DE DATOS DEL JUEGO ESPECÍFICO
+const { slug } = Astro.params;
+
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+);
+
+const { data: juego, error } = await supabase
+  .from('Games')
+  .select('*')
+  .eq('slug', slug)
+  .single();
+
+// Redirección de seguridad si el juego no existe
+if (error || !juego) {
+  return Astro.redirect('/404');
+}
+---
+
+<Layout title={`Wiki | ${juego.title}`}>
+  <div class="wiki-container">
+    
+    <div class="main-content">
+      <!-- LADO IZQUIERDO: Portada + Compra -->
+      <div class="sidebar">
+        <div class="poster-area">
+          <img src={juego.img_url} alt={juego.title} />
+        </div>
+        
+        <div class="purchase-row">
+          <div class="price-box">
+            <!-- Validación de precio para evitar errores .toFixed -->
+            ${juego.price ? juego.price.toFixed(2) : "0.00"}
+          </div>
+          <button class="buy-button">COMPRAR KEY</button>
+        </div>
+      </div>
+
+      <!-- LADO DERECHO: Título + Descripción -->
+      <div class="details-area">
+        <h1 class="game-title">{juego.title}</h1>
+        <div class="description-text">
+          <p>{juego.description || "Este título aún no cuenta con una descripción oficial en la base de datos."}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAILER (Solo se renderiza si existe video_id) -->
+    {juego.video_id && (
+      <div class="trailer-section">
+        <h2 class="section-label">TRAILER OFICIAL</h2>
+        <div class="trailer-container">
+          <iframe 
+            src={`https://www.youtube.com/embed/${juego.video_id}`}
+            title="YouTube video player" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+          </iframe>
+        </div>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .wiki-container {
+    max-width: 1100px;
+    margin: 3rem auto;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    color: white;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .main-content {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  /* SIDEBAR */
+  .poster-area img {
+    width: 100%;
+    border-radius: 15px;
+    border: 3px solid #7c4dff; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+
+  .purchase-row {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+  }
+
+  .price-box {
+    flex: 1;
+    border: 2px solid #2de29d;
+    color: #2de29d;
+    text-align: center;
+    padding: 0.8rem;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+
+  .buy-button {
+    flex: 2;
+    background: #5e35b1;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: 0.3s;
+  }
+
+  .buy-button:hover {
+    background: #7c4dff;
+    transform: translateY(-3px);
+  }
+
+  /* DETALLES */
+  .game-title {
+    font-size: 3.5rem;
+    margin: 0 0 1.5rem 0;
+    font-weight: 900;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .description-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #cbd5e1;
+    text-align: justify;
+  }
+
+  /* TRAILER */
+  .section-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    color: #7c4dff;
+  }
+
+  .trailer-container {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 2px solid rgba(124, 77, 255, 0.3);
+  }
+
+  .trailer-container iframe {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 850px) {
+    .main-content { grid-template-columns: 1fr; }
+    .sidebar { max-width: 320px; margin: 0 auto; }
+    .game-title { text-align: center; font-size: 2.5rem; }
+  }
+</style>

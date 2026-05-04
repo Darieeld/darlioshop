@@ -18,3 +18,16 @@ const { data: juegos, error } = await supabase.from('Games').select('*');
         ))}
     </section>
 </Layout>
+
+<style>
+  .grid-juegos {
+    display: grid;
+    /* Esto ajusta el número de columnas según el tamaño de la pantalla */
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+    gap: 2rem;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 0;
+  }
+</style>
