@@ -1,11 +1,38 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// Hemos quitado Supabase temporalmente para probar el flujo visual
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="DARLIOS | Catálogo">
+  <section class="catalogo-container">
+    <header style="text-align: center; color: white; padding: 2rem;">
+        <h1>DARLIOSHOP</h1>
+        <p>Confirmando flujo visual...</p>
+    </header>
+
+    <div class="grid-juegos">
+      <!-- Aquí irán los juegos después -->
+      <div style="background: rgba(255,255,255,0.1); color: white; padding: 2rem; border-radius: 10px; text-align: center;">
+        Proximamente: Tus juegos de Supabase
+      </div>
+    </div>
+  </section>
 </Layout>
+
+<style>
+  .catalogo-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 0;
+  }
+
+  .grid-juegos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+</style>
