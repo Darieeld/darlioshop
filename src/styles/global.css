@@ -1,0 +1,36 @@
+:root {
+  --nav-bg: #111821;    /* El negro azulado del navbar */
+  --body-bg: #1c4468;   /* El azul petróleo del fondo */
+  --text-primary: #ffffff;
+  --accent-color: #4f46e5; /* Un toque de color para bordes/botones */
+}
+
+/* Reset Básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--body-bg);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Tratamiento de Imágenes (Pixel Art) */
+img, .pixel-art {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Estilo para enlaces por defecto */
+a {
+  text-decoration: none;
+  color: inherit;
+}

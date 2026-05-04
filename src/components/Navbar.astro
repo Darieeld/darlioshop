@@ -1,0 +1,42 @@
+---
+/* Navbar de DARLIOS */
+---
+
+<nav class="navbar">
+  <div class="logo-container">
+    <!-- Mantenemos el logo que aún no has subido -->
+    <img src="/Sprite-0002.png" alt="Logo" class="pixel-logo" />
+    <span class="brand-name">DARLIOS</span>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    background-color: var(--nav-bg); /* Usa el negro azulado de tu global.css */
+    padding: 15px 40px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .pixel-logo {
+    width: 45px;
+    height: auto;
+    image-rendering: pixelated; /* Reforzamos el look pixel-art aquí también */
+  }
+
+  .brand-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: white;
+    font-family: 'Press Start 2P', cursive; /* Le damos el toque retro al nombre */
+  }
+</style>

@@ -1,24 +1,64 @@
 ---
-interface Props { title: string; }
-const { title } = Astro.props;
+import Navbar from '../components/Navbar.astro';
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = "Tienda de videojuegos Darlios" } = Astro.props;
 ---
+
 <!doctype html>
 <html lang="es">
 	<head>
 		<meta charset="UTF-8" />
+		<meta name="description" content={description} />
 		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<title>{title}</title>
+		
+		<!-- Google Fonts para look retro y moderno -->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 	</head>
 	<body>
-		<slot />
+		<Navbar />
+		
+		<main class="container">
+			<slot /> <!-- Aquí se inyecta el contenido de index.astro -->
+		</main>
+
+		<footer>
+			<p>&copy; 2026 DARLIOS - Gaming Store & Wiki</p>
+		</footer>
 	</body>
 </html>
+
 <style is:global>
-	html, body {
-		margin: 0;
-		padding: 0;
-		background: #13151a; /* Fondo oscuro global */
-		color: white;
-		font-family: system-ui, sans-serif;
+	/* Estilos estructurales del Layout */
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 2rem;
+		/* Asegura que el footer se quede abajo incluso con poco contenido */
+		min-height: calc(100vh - 180px); 
+	}
+
+	footer {
+		text-align: center;
+		padding: 3rem 2rem;
+		background-color: var(--nav-bg); /* Usando tu variable de global.css */
+		color: rgba(255, 255, 255, 0.4);
+		font-size: 0.8rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.05);
+	}
+
+	/* Aplicación global de la fuente retro a títulos */
+	h1, h2, h3 {
+		font-family: 'Press Start 2P', cursive;
+		line-height: 1.5;
 	}
 </style>

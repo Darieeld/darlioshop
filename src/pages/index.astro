@@ -3,68 +3,18 @@ import Layout from '../layouts/Layout.astro';
 import GameCard from '../components/GameCard.astro';
 import { createClient } from '@supabase/supabase-js';
 
-// Conexión usando las variables que YA configuramos en Cloudflare
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
   import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 );
 
-// Hacemos la consulta real
-const { data: juegos, error } = await supabase
-  .from('Games')
-  .select('*');
-
-if (error) {
-  console.error('Error al conectar con Supabase:', error.message);
-}
+const { data: juegos, error } = await supabase.from('Games').select('*');
 ---
 
-<Layout title="DARLIOS | Catálogo Real">
-  <main class="main-content">
-    <header class="header">
-        <h1>DARLIOSHOP</h1>
-        <p>Catálogo alimentado por Supabase</p>
-    </header>
-
-    <section class="grid-container">
-      <div class="grid-juegos">
+<Layout title="DARLIOSHOP | Catálogo">
+    <section class="grid-juegos">
         {juegos && juegos.map((juego) => (
-          <GameCard 
-            title={juego.title} 
-            price={juego.price} 
-            img_url={juego.img_url} 
-            slug={juego.slug} 
-          />
+            <GameCard {...juego} />
         ))}
-      </div>
-
-      {(!juegos || juegos.length === 0) && !error && (
-        <div class="status-msg">
-            <p>Conectando con la base de datos...</p>
-        </div>
-      )}
-
-      {error && (
-        <div class="status-msg error">
-            <p>Error de conexión: Verifica las llaves en Cloudflare.</p>
-        </div>
-      )}
     </section>
-  </main>
 </Layout>
-
-<style>
-  .main-content { min-height: 100vh; padding: 2rem; }
-  .header { text-align: center; margin-bottom: 3rem; }
-  h1 { font-size: 3rem; color: #4f46e5; margin: 0; }
-  .grid-container { max-width: 1200px; margin: 0 auto; }
-  
-  .grid-juegos {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 2rem;
-  }
-
-  .status-msg { text-align: center; padding: 4rem; opacity: 0.6; }
-  .error { color: #ff4d4d; }
-</style>
