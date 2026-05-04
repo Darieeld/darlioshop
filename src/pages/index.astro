@@ -1,38 +1,14 @@
----
-import Layout from '../layouts/Layout.astro';
-// Hemos quitado Supabase temporalmente para probar el flujo visual
----
-
-<Layout title="DARLIOS | Catálogo">
-  <section class="catalogo-container">
-    <header style="text-align: center; color: white; padding: 2rem;">
-        <h1>DARLIOSHOP</h1>
-        <p>Confirmando flujo visual...</p>
-    </header>
-
-    <div class="grid-juegos">
-      <!-- Aquí irán los juegos después -->
-      <div style="background: rgba(255,255,255,0.1); color: white; padding: 2rem; border-radius: 10px; text-align: center;">
-        Proximamente: Tus juegos de Supabase
-      </div>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>DARLIOS | Test</title>
+    <meta name="viewport" content="width=device-width" />
+  </head>
+  <body style="background-color: #13151a; color: white; font-family: sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <div style="text-align: center; border: 2px solid #4f46e5; padding: 2rem; border-radius: 1rem;">
+      <h1 style="color: #4f46e5;">¡DARLIOS VIVE!</h1>
+      <p>Si lees esto, el puente entre GitHub, Cloudflare y tu dominio está al 100%.</p>
+      <small style="opacity: 0.5;">Próximo paso: Inyectar Supabase.</small>
     </div>
-  </section>
-</Layout>
-
-<style>
-  .catalogo-container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 0;
-  }
-
-  .grid-juegos {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
-    gap: 2rem;
-    padding: 2rem;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-</style>
+  </body>
+</html>
