@@ -1,0 +1,23 @@
+---
+const { title, price, img_url, slug } = Astro.props;
+---
+<div class="card">
+    <img src={img_url} alt={title} />
+    <div class="info">
+        <h3>{title}</h3>
+        <p>{price}$</p>
+    </div>
+</div>
+
+<style>
+    .card {
+        background: #1d1f24;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+    }
+    img { width: 100%; border-radius: 8px; aspect-ratio: 1/1; object-fit: cover; }
+    h3 { margin: 10px 0 5px; font-size: 1rem; color: white; }
+    p { color: #10b981; font-weight: bold; margin: 0; }
+</style>

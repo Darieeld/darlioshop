@@ -1,14 +1,20 @@
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <title>DARLIOS | Test</title>
-    <meta name="viewport" content="width=device-width" />
-  </head>
-  <body style="background-color: #13151a; color: white; font-family: sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh;">
-    <div style="text-align: center; border: 2px solid #4f46e5; padding: 2rem; border-radius: 1rem;">
-      <h1 style="color: #4f46e5;">¡DARLIOS VIVE!</h1>
-      <p>Si lees esto, el puente entre GitHub, Cloudflare y tu dominio está al 100%.</p>
-      <small style="opacity: 0.5;">Próximo paso: Inyectar Supabase.</small>
-    </div>
-  </body>
-</html>
+---
+import Layout from '../layouts/Layout.astro';
+import GameCard from '../components/GameCard.astro';
+---
+
+<Layout title="DARLIOS | Test de Archivos">
+	<main style="padding: 2rem; text-align: center;">
+		<h1 style="color: #4f46e5;">Verificando Componentes...</h1>
+		<p>Si ves la tarjeta de abajo, el Layout y el GameCard están bien creados.</p>
+		
+		<div style="display: flex; justify-content: center; margin-top: 2rem;">
+			<GameCard 
+				title="Juego de Prueba" 
+				price="99" 
+				img_url="https://via.placeholder.com/150" 
+				slug="test" 
+			/>
+		</div>
+	</main>
+</Layout>
