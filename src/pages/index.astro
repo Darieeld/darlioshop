@@ -21,13 +21,13 @@ const { data: todasLasKeys } = await supabase
 <Layout title="DARLIOSHOP | Catálogo">
     <section class="grid-juegos">
         {juegos && juegos.map((juego) => {
-            // 3. Calculamos si este juego específico tiene llaves
+            // 3. Calculamos si este juego tiene llaves disponibles (is_sold: false)
             const tieneStock = todasLasKeys?.some(key => key.game_id === juego.id);
             
             return (
                 <GameCard 
                     {...juego} 
-                    lemon_url={juego.lemon_checkout_url} // Mapeamos el nombre de la DB a la prop del componente
+                    lemon_url={juego.lemon_checkout_url} 
                     hayStock={tieneStock} 
                 />
             );
@@ -43,6 +43,6 @@ const { data: todasLasKeys } = await supabase
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem 1rem; /* Añadido un poco de padding lateral para móviles */
+    padding: 2rem 0;
   }
 </style>
