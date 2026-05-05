@@ -22,7 +22,8 @@ const { title, description = "Tienda de videojuegos Darlios" } = Astro.props;
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-	</head>
+		
+		</head>
 	<body>
 		<Navbar />
 		
@@ -37,6 +38,10 @@ const { title, description = "Tienda de videojuegos Darlios" } = Astro.props;
 </html>
 
 <style is:global>
+	:root {
+		--nav-bg: #0f172a; /* Asegúrate de que coincida con tus variables de global.css */
+	}
+
 	.container {
 		max-width: 1200px;
 		margin: 0 auto;
@@ -58,4 +63,3 @@ const { title, description = "Tienda de videojuegos Darlios" } = Astro.props;
 		line-height: 1.5;
 	}
 </style>
-

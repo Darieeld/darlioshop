@@ -1,30 +1,27 @@
 ---
-export const prerender = false; // Mantenemos que sea dinámico
+export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import { createClient } from '@supabase/supabase-js';
 
-// 1. Inicializamos el cliente una sola vez
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
   import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 );
 
-// 2. Recogemos el slug directamente de los parámetros de la URL
 const { slug } = Astro.params;
 
-// 3. Traemos la info del juego
+// 1. Traemos la info del juego incluyendo la nueva columna
 const { data: juego, error } = await supabase
   .from('Games')
   .select('*')
   .eq('slug', slug)
   .single();
 
-// Si hay error o el juego no existe en Supabase, mandamos al 404
 if (error || !juego) {
   return Astro.redirect('/404');
 }
 
-// 4. Lógica de Stock Real
+// 2. Lógica de Stock Real
 const { count: stockActual } = await supabase
   .from('keys_inventory')
   .select('*', { count: 'exact', head: true })
@@ -32,11 +29,13 @@ const { count: stockActual } = await supabase
   .eq('is_sold', false);
 
 const hayStock = (stockActual ?? 0) > 0;
+
+// 3. Token de cliente (desde tu .env)
+const PADDLE_CLIENT_TOKEN = import.meta.env.PUBLIC_PADDLE_CLIENT_TOKEN;
 ---
 
 <Layout title={`Wiki | ${juego.title}`}>
   <div class="wiki-container">
-    
     <div class="main-content">
       <div class="sidebar">
         <div class="poster-area">
@@ -49,21 +48,26 @@ const hayStock = (stockActual ?? 0) > 0;
           </div>
 
           {hayStock ? (
-            <button class="buy-button">COMPRAR KEY</button>
+            <button 
+              class="buy-button" 
+              id="paddle-buy-btn"
+              data-price-id={juego.paddle_price_id} 
+              data-game-id={juego.id}
+            >
+              COMPRAR KEY
+            </button>
           ) : (
             <button class="buy-button" disabled>AGOTADO</button>
           )}
         </div>
         
-        {hayStock && (
-          <p class="stock-tag">¡Stock disponible!</p>
-        )}
+        {hayStock && <p class="stock-tag">¡Stock disponible!</p>}
       </div>
 
       <div class="details-area">
         <h1 class="game-title">{juego.title}</h1>
         <div class="description-text">
-          <p>{juego.description || "Este título aún no cuenta con una descripción oficial en la base de datos."}</p>
+          <p>{juego.description || "Este título aún no cuenta con una descripción oficial."}</p>
         </div>
       </div>
     </div>
@@ -85,132 +89,67 @@ const hayStock = (stockActual ?? 0) > 0;
   </div>
 </Layout>
 
+<script is:inline src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+
+<script is:inline define:vars={{ PADDLE_CLIENT_TOKEN }}>
+  function initPaddle() {
+    if (typeof Paddle !== 'undefined') {
+      // 1. Inicializar
+      Paddle.Initialize({ 
+        token: PADDLE_CLIENT_TOKEN
+      });
+
+      const buyButton = document.getElementById('paddle-buy-btn');
+      
+      if (buyButton) {
+        buyButton.addEventListener('click', () => {
+          const priceId = buyButton.getAttribute('data-price-id');
+          const gameId = buyButton.getAttribute('data-game-id');
+          
+          if (!priceId || priceId === "null") {
+            alert("Error: No se encontró el ID de precio de Paddle en Supabase para este juego.");
+            return;
+          }
+
+          // 2. Abrir Checkout
+          Paddle.Checkout.open({
+            items: [{ priceId: priceId, quantity: 1 }],
+            customData: {
+              game_id: gameId // Esto lo recibirá el Webhook después
+            },
+            settings: {
+              displayMode: 'overlay',
+              theme: 'dark',
+              locale: 'es'
+            }
+          });
+        });
+      }
+    } else {
+      // Si Paddle aún no carga, esperamos un poquito
+      setTimeout(initPaddle, 100);
+    }
+  }
+
+  // Iniciar el proceso
+  initPaddle();
+</script>
+
 <style>
-  .wiki-container {
-    max-width: 1100px;
-    margin: 3rem auto;
-    padding: 0 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 4rem;
-    color: white;
-    font-family: 'Inter', sans-serif;
-  }
-
-  .main-content {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 3rem;
-    align-items: start;
-  }
-
-  /* SIDEBAR */
-  .poster-area img {
-    width: 100%;
-    border-radius: 15px;
-    border: 3px solid #7c4dff; 
-    box-shadow: 0 0 25px rgba(124, 77, 255, 0.4);
-    transition: transform 0.3s ease;
-  }
-
-  .poster-area img:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 40px rgba(124, 77, 255, 0.6);
-  }
-
-  .purchase-row {
-    display: flex;
-    gap: 0.8rem;
-    margin-top: 1.5rem;
-  }
-
-  .price-box {
-    flex: 1;
-    border: 2px solid #2de29d;
-    color: #2de29d;
-    text-align: center;
-    padding: 0.8rem;
-    border-radius: 10px;
-    font-size: 1.2rem;
-    font-weight: 800;
-  }
-
-  .buy-button {
-    flex: 2;
-    background: #5e35b1;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-weight: bold;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: 0.3s;
-    padding: 0.8rem;
-  }
-
-  .buy-button:hover:not(:disabled) {
-    background: #7c4dff;
-    transform: translateY(-3px);
-  }
-
-  /* ESTADO AGOTADO (AUTOMÁTICO) */
-  .buy-button:disabled {
-    background: #4a5568 !important;
-    color: #a0aec0 !important;
-    cursor: not-allowed;
-    opacity: 0.7;
-    border: 1px solid #2d3748;
-    transform: none !important;
-  }
-
-  .stock-tag {
-    color: #2de29d;
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-    text-align: center;
-    font-weight: bold;
-  }
-
-  /* DETALLES */
-  .game-title {
-    font-size: 3.5rem;
-    margin: 0 0 1.5rem 0;
-    font-weight: 900;
-    line-height: 1;
-  }
-
-  .description-text {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    color: #cbd5e1;
-    text-align: justify;
-  }
-
-  /* TRAILER */
-  .section-label {
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-    color: #7c4dff;
-    font-weight: bold;
-  }
-
-  .trailer-container {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    border-radius: 20px;
-    overflow: hidden;
-    border: 2px solid rgba(124, 77, 255, 0.3);
-  }
-
-  .trailer-container iframe {
-    width: 100%;
-    height: 100%;
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 850px) {
-    .main-content { grid-template-columns: 1fr; }
-    .sidebar { max-width: 320px; margin: 0 auto; }
-    .game-title { text-align: center; font-size: 2.5rem; }
-  }
+  .wiki-container { max-width: 1100px; margin: 3rem auto; padding: 0 1rem; display: flex; flex-direction: column; gap: 4rem; color: white; font-family: 'Inter', sans-serif; }
+  .main-content { display: grid; grid-template-columns: 320px 1fr; gap: 3rem; align-items: start; }
+  .poster-area img { width: 100%; border-radius: 15px; border: 3px solid #7c4dff; box-shadow: 0 0 25px rgba(124, 77, 255, 0.4); transition: transform 0.3s ease; }
+  .poster-area img:hover { transform: scale(1.02); box-shadow: 0 0 40px rgba(124, 77, 255, 0.6); }
+  .purchase-row { display: flex; gap: 0.8rem; margin-top: 1.5rem; }
+  .price-box { flex: 1; border: 2px solid #2de29d; color: #2de29d; text-align: center; padding: 0.8rem; border-radius: 10px; font-size: 1.2rem; font-weight: 800; }
+  .buy-button { flex: 2; background: #5e35b1; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; padding: 0.8rem; }
+  .buy-button:hover:not(:disabled) { background: #7c4dff; transform: translateY(-3px); }
+  .buy-button:disabled { background: #4a5568 !important; color: #a0aec0 !important; cursor: not-allowed; opacity: 0.7; border: 1px solid #2d3748; transform: none !important; }
+  .stock-tag { color: #2de29d; font-size: 0.8rem; margin-top: 0.5rem; text-align: center; font-weight: bold; }
+  .game-title { font-size: 3.5rem; margin: 0 0 1.5rem 0; font-weight: 900; line-height: 1; }
+  .description-text { font-size: 1.1rem; line-height: 1.8; color: #cbd5e1; text-align: justify; }
+  .section-label { font-size: 0.9rem; margin-bottom: 1.5rem; color: #7c4dff; font-weight: bold; }
+  .trailer-container { width: 100%; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; border: 2px solid rgba(124, 77, 255, 0.3); }
+  .trailer-container iframe { width: 100%; height: 100%; }
+  @media (max-width: 850px) { .main-content { grid-template-columns: 1fr; } .sidebar { max-width: 320px; margin: 0 auto; } .game-title { text-align: center; font-size: 2.5rem; } }
 </style>
