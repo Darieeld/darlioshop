@@ -9,10 +9,16 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "generate-types": "wrangler types"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^13.3.1",
     "@supabase/supabase-js": "^2.105.3",
-    "astro": "^6.2.2"
+    "astro": "^6.2.2",
+    "wrangler": "^4.87.0"
+  },
+  "overrides": {
+    "vite": "^7"
   }
 }
