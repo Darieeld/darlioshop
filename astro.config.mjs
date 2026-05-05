@@ -1,13 +1,7 @@
 import { defineConfig } from 'astro/config';
-import cloudflare from '@astrojs/cloudflare';
+import cloudflare from '@astrojs/cloudflare'; // <--- Esto debe estar instalado
 
 export default defineConfig({
-  output: 'server',
-  adapter: cloudflare({
-    platformProxy: {
-      enabled: true,
-    },
-  }),
-  // Forzamos a Astro a usar la ruta que Cloudflare te obliga a poner
-  outDir: './dist', 
-});
+  output: 'server', // O 'hybrid' si solo algunas páginas son dinámicas
+  adapter: cloudflare(),
+}); 
