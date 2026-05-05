@@ -6,15 +6,16 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-  "dev": "astro dev",
-  "build": "astro build",
-  "preview": "astro preview",
-  "astro": "astro"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
   "dependencies": {
     "@astrojs/netlify": "^7.0.8",
     "@supabase/supabase-js": "^2.105.3",
-    "astro": "^6.2.2"
+    "astro": "^6.2.2",
+    "resend": "^6.12.2"
   },
   "overrides": {
     "vite": "^7"
