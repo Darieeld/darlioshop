@@ -1,46 +1,34 @@
 ---
-export const prerender = false;
+export const prerender = false; // Mantenemos que sea dinámico
 import Layout from '../../layouts/Layout.astro';
 import { createClient } from '@supabase/supabase-js';
 
-// 1. FUNCIÓN DE RUTA ESTÁTICA
-export async function getStaticPaths() {
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  );
-  
-  const { data: juegos } = await supabase.from('Games').select('slug');
-  
-  return (juegos || []).map((juego) => ({
-    params: { slug: juego.slug },
-  }));
-}
-
-// 2. RECOGIDA DE DATOS
-const { slug } = Astro.params;
-
+// 1. Inicializamos el cliente una sola vez
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
   import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 );
 
-// Traemos la info del juego
+// 2. Recogemos el slug directamente de los parámetros de la URL
+const { slug } = Astro.params;
+
+// 3. Traemos la info del juego
 const { data: juego, error } = await supabase
   .from('Games')
   .select('*')
   .eq('slug', slug)
   .single();
 
+// Si hay error o el juego no existe en Supabase, mandamos al 404
 if (error || !juego) {
   return Astro.redirect('/404');
 }
 
-// 3. LÓGICA DE STOCK REAL (Consultando la nueva tabla keys_inventory)
+// 4. Lógica de Stock Real
 const { count: stockActual } = await supabase
   .from('keys_inventory')
   .select('*', { count: 'exact', head: true })
-  .eq('game_id', juego.id) // <--- Cambia el '2' por 'juego.id'
+  .eq('game_id', juego.id)
   .eq('is_sold', false);
 
 const hayStock = (stockActual ?? 0) > 0;
@@ -50,7 +38,6 @@ const hayStock = (stockActual ?? 0) > 0;
   <div class="wiki-container">
     
     <div class="main-content">
-      <!-- LADO IZQUIERDO: Portada + Compra -->
       <div class="sidebar">
         <div class="poster-area">
           <img src={juego.img_url} alt={juego.title} />
@@ -61,7 +48,6 @@ const hayStock = (stockActual ?? 0) > 0;
             ${juego.price ? juego.price.toFixed(2) : "0.00"}
           </div>
 
-          <!-- BOTÓN DINÁMICO -->
           {hayStock ? (
             <button class="buy-button">COMPRAR KEY</button>
           ) : (
@@ -74,7 +60,6 @@ const hayStock = (stockActual ?? 0) > 0;
         )}
       </div>
 
-      <!-- LADO DERECHO: Título + Descripción -->
       <div class="details-area">
         <h1 class="game-title">{juego.title}</h1>
         <div class="description-text">
@@ -83,7 +68,6 @@ const hayStock = (stockActual ?? 0) > 0;
       </div>
     </div>
 
-    <!-- TRAILER -->
     {juego.video_id && (
       <div class="trailer-section">
         <h2 class="section-label">TRAILER OFICIAL</h2>
