@@ -1,8 +1,9 @@
 ---
+export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import { createClient } from '@supabase/supabase-js';
 
-// 1. FUNCIÓN DE RUTA ESTÁTICA (Indispensable para que Astro genere las páginas)
+// 1. FUNCIÓN DE RUTA ESTÁTICA
 export async function getStaticPaths() {
   const supabase = createClient(
     import.meta.env.PUBLIC_SUPABASE_URL,
@@ -16,7 +17,7 @@ export async function getStaticPaths() {
   }));
 }
 
-// 2. RECOGIDA DE DATOS DEL JUEGO ESPECÍFICO
+// 2. RECOGIDA DE DATOS
 const { slug } = Astro.params;
 
 const supabase = createClient(
@@ -24,16 +25,25 @@ const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 );
 
+// Traemos la info del juego
 const { data: juego, error } = await supabase
   .from('Games')
   .select('*')
   .eq('slug', slug)
   .single();
 
-// Redirección de seguridad si el juego no existe
 if (error || !juego) {
   return Astro.redirect('/404');
 }
+
+// 3. LÓGICA DE STOCK REAL (Consultando la nueva tabla keys_inventory)
+const { count: stockActual } = await supabase
+  .from('keys_inventory')
+  .select('*', { count: 'exact', head: true })
+  .eq('game_id', juego.id) // <--- Cambia el '2' por 'juego.id'
+  .eq('is_sold', false);
+
+const hayStock = (stockActual ?? 0) > 0;
 ---
 
 <Layout title={`Wiki | ${juego.title}`}>
@@ -48,11 +58,20 @@ if (error || !juego) {
         
         <div class="purchase-row">
           <div class="price-box">
-            <!-- Validación de precio para evitar errores .toFixed -->
             ${juego.price ? juego.price.toFixed(2) : "0.00"}
           </div>
-          <button class="buy-button">COMPRAR KEY</button>
+
+          <!-- BOTÓN DINÁMICO -->
+          {hayStock ? (
+            <button class="buy-button">COMPRAR KEY</button>
+          ) : (
+            <button class="buy-button" disabled>AGOTADO</button>
+          )}
         </div>
+        
+        {hayStock && (
+          <p class="stock-tag">¡Stock disponible!</p>
+        )}
       </div>
 
       <!-- LADO DERECHO: Título + Descripción -->
@@ -64,7 +83,7 @@ if (error || !juego) {
       </div>
     </div>
 
-    <!-- TRAILER (Solo se renderiza si existe video_id) -->
+    <!-- TRAILER -->
     {juego.video_id && (
       <div class="trailer-section">
         <h2 class="section-label">TRAILER OFICIAL</h2>
@@ -106,7 +125,13 @@ if (error || !juego) {
     width: 100%;
     border-radius: 15px;
     border: 3px solid #7c4dff; 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 0 25px rgba(124, 77, 255, 0.4);
+    transition: transform 0.3s ease;
+  }
+
+  .poster-area img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 40px rgba(124, 77, 255, 0.6);
   }
 
   .purchase-row {
@@ -136,11 +161,30 @@ if (error || !juego) {
     cursor: pointer;
     text-transform: uppercase;
     transition: 0.3s;
+    padding: 0.8rem;
   }
 
-  .buy-button:hover {
+  .buy-button:hover:not(:disabled) {
     background: #7c4dff;
     transform: translateY(-3px);
+  }
+
+  /* ESTADO AGOTADO (AUTOMÁTICO) */
+  .buy-button:disabled {
+    background: #4a5568 !important;
+    color: #a0aec0 !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+    border: 1px solid #2d3748;
+    transform: none !important;
+  }
+
+  .stock-tag {
+    color: #2de29d;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    text-align: center;
+    font-weight: bold;
   }
 
   /* DETALLES */
@@ -149,7 +193,6 @@ if (error || !juego) {
     margin: 0 0 1.5rem 0;
     font-weight: 900;
     line-height: 1;
-    color: #fff;
   }
 
   .description-text {
@@ -161,10 +204,10 @@ if (error || !juego) {
 
   /* TRAILER */
   .section-label {
-    font-family: 'Press Start 2P', cursive;
     font-size: 0.9rem;
     margin-bottom: 1.5rem;
     color: #7c4dff;
+    font-weight: bold;
   }
 
   .trailer-container {
@@ -185,14 +228,5 @@ if (error || !juego) {
     .main-content { grid-template-columns: 1fr; }
     .sidebar { max-width: 320px; margin: 0 auto; }
     .game-title { text-align: center; font-size: 2.5rem; }
-  }
-  .poster-area img {
-    /* ... lo que ya tienes ... */
-    box-shadow: 0 0 25px rgba(124, 77, 255, 0.4); /* Resplandor morado */
-    transition: transform 0.3s ease;
-  }
-  .poster-area img:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 40px rgba(124, 77, 255, 0.6);
   }
 </style>

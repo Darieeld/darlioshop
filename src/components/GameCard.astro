@@ -1,5 +1,6 @@
 ---
-const { title, price, img_url, slug, checkout_url = "#" } = Astro.props;
+// Añadimos 'hayStock' a las props que recibe el componente
+const { id, title, price, img_url, slug, checkout_url = "#", hayStock } = Astro.props;
 ---
 
 <article class="game-card">
@@ -16,8 +17,11 @@ const { title, price, img_url, slug, checkout_url = "#" } = Astro.props;
 
   <!-- BOTÓN DE COMPRA INDEPENDIENTE -->
   <div class="actions">
-    <a href={checkout_url} class="buy-btn">
-      COMPRAR KEY
+    <a 
+      href={hayStock ? checkout_url : "javascript:void(0)"} 
+      class={hayStock ? "buy-btn" : "buy-btn disabled"}
+    >
+      {hayStock ? "COMPRAR KEY" : "AGOTADO"}
     </a>
   </div>
 </article>
@@ -30,12 +34,10 @@ const { title, price, img_url, slug, checkout_url = "#" } = Astro.props;
     display: flex;
     flex-direction: column;
     height: 100%;
-    /* 1. Recuperamos el borde (sutil por defecto) */
     border: 2px solid rgba(124, 77, 255, 0.1); 
     transition: all 0.3s ease;
   }
 
-  /* 2. El borde se ilumina al pasar el mouse por CUALQUIER parte de la card */
   .game-card:hover {
     transform: translateY(-8px);
     border-color: #7c4dff; 
@@ -52,7 +54,6 @@ const { title, price, img_url, slug, checkout_url = "#" } = Astro.props;
     width: 100%; 
     aspect-ratio: 2/3; 
     overflow: hidden; 
-    /* Quitamos bordes redondeados internos para que encajen con el padre */
   }
   
   .game-img { 
@@ -62,7 +63,6 @@ const { title, price, img_url, slug, checkout_url = "#" } = Astro.props;
     transition: transform 0.5s ease;
   }
 
-  /* Zoom suave en la imagen al pasar por la zona de wiki */
   .wiki-link:hover .game-img {
     transform: scale(1.05);
   }
@@ -88,7 +88,7 @@ const { title, price, img_url, slug, checkout_url = "#" } = Astro.props;
 
   .actions {
     padding: 0 1rem 1.2rem 1rem;
-    margin-top: auto; /* Empuja el botón siempre al fondo */
+    margin-top: auto;
   }
 
   .buy-btn {
@@ -105,10 +105,26 @@ const { title, price, img_url, slug, checkout_url = "#" } = Astro.props;
     transition: all 0.2s ease;
   }
 
-  /* 3. El botón brilla de forma independiente cuando te pones encima */
-  .buy-btn:hover {
+  /* Efectos para cuando SÍ hay stock */
+  .buy-btn:hover:not(.disabled) {
     background-color: #7c4dff;
     box-shadow: 0 0 15px rgba(124, 77, 255, 0.6);
     transform: scale(1.02);
+  }
+
+  /* ESTILO PARA EL ESTADO AGOTADO (DISABLED) */
+  .buy-btn.disabled {
+    background-color: #242424; /* Gris oscuro */
+    color: #666;               /* Texto grisáceo */
+    cursor: not-allowed;       /* Cursor de prohibido */
+    border: 1px solid #333;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .buy-btn.disabled:hover {
+    background-color: #242424; /* Mantiene el gris al pasar el mouse */
+    box-shadow: none;
+    transform: none;
   }
 </style>
