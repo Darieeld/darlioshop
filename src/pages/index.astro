@@ -16,17 +16,20 @@ const { data: todasLasKeys } = await supabase
   .from('keys_inventory')
   .select('game_id')
   .eq('is_sold', false);
-
 ---
 
 <Layout title="DARLIOSHOP | Catálogo">
     <section class="grid-juegos">
         {juegos && juegos.map((juego) => {
-            // 3. Calculamos si este juego específico tiene llaves en el array que bajamos
+            // 3. Calculamos si este juego específico tiene llaves
             const tieneStock = todasLasKeys?.some(key => key.game_id === juego.id);
             
             return (
-                <GameCard {...juego} hayStock={tieneStock} />
+                <GameCard 
+                    {...juego} 
+                    lemon_url={juego.lemon_checkout_url} // Mapeamos el nombre de la DB a la prop del componente
+                    hayStock={tieneStock} 
+                />
             );
         })}
     </section>
@@ -40,6 +43,6 @@ const { data: todasLasKeys } = await supabase
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem 0;
+    padding: 2rem 1rem; /* Añadido un poco de padding lateral para móviles */
   }
 </style>

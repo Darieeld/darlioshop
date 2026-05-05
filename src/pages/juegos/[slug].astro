@@ -10,7 +10,7 @@ const supabase = createClient(
 
 const { slug } = Astro.params;
 
-// 1. Traemos la info del juego incluyendo la nueva columna
+// 1. Traemos la info del juego usando la nueva columna lemon_checkout_url
 const { data: juego, error } = await supabase
   .from('Games')
   .select('*')
@@ -29,9 +29,6 @@ const { count: stockActual } = await supabase
   .eq('is_sold', false);
 
 const hayStock = (stockActual ?? 0) > 0;
-
-// 3. Token de cliente (desde tu .env)
-const PADDLE_CLIENT_TOKEN = import.meta.env.PUBLIC_PADDLE_CLIENT_TOKEN;
 ---
 
 <Layout title={`Wiki | ${juego.title}`}>
@@ -50,9 +47,8 @@ const PADDLE_CLIENT_TOKEN = import.meta.env.PUBLIC_PADDLE_CLIENT_TOKEN;
           {hayStock ? (
             <button 
               class="buy-button" 
-              id="paddle-buy-btn"
-              data-price-id={juego.paddle_price_id} 
-              data-game-id={juego.id}
+              id="buy-button"
+              data-lemon-url={juego.lemon_checkout_url} 
             >
               COMPRAR KEY
             </button>
@@ -89,53 +85,39 @@ const PADDLE_CLIENT_TOKEN = import.meta.env.PUBLIC_PADDLE_CLIENT_TOKEN;
   </div>
 </Layout>
 
-<script is:inline src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
 
-<script is:inline define:vars={{ PADDLE_CLIENT_TOKEN }}>
-  function initPaddle() {
-    if (typeof Paddle !== 'undefined') {
-      // 1. Inicializar
-      Paddle.Initialize({ 
-        token: PADDLE_CLIENT_TOKEN
+<script is:inline>
+  function initLemon() {
+    const buyButton = document.getElementById('buy-button');
+    
+    if (buyButton) {
+      buyButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        const checkoutUrl = buyButton.getAttribute('data-lemon-url');
+        
+        if (!checkoutUrl || checkoutUrl === "NULL") {
+          alert("Error: No se encontró el enlace de Lemon Squeezy para este juego.");
+          return;
+        }
+
+        // Abre el modal de Lemon Squeezy directamente
+        if (typeof LemonSqueezy !== 'undefined') {
+          LemonSqueezy.Url.Open(checkoutUrl);
+        } else {
+          // Fallback en caso de que el script no haya cargado
+          window.location.href = checkoutUrl;
+        }
       });
-
-      const buyButton = document.getElementById('paddle-buy-btn');
-      
-      if (buyButton) {
-        buyButton.addEventListener('click', () => {
-          const priceId = buyButton.getAttribute('data-price-id');
-          const gameId = buyButton.getAttribute('data-game-id');
-          
-          if (!priceId || priceId === "null") {
-            alert("Error: No se encontró el ID de precio de Paddle en Supabase para este juego.");
-            return;
-          }
-
-          // 2. Abrir Checkout
-          Paddle.Checkout.open({
-            items: [{ priceId: priceId, quantity: 1 }],
-            customData: {
-              game_id: gameId // Esto lo recibirá el Webhook después
-            },
-            settings: {
-              displayMode: 'overlay',
-              theme: 'dark',
-              locale: 'es'
-            }
-          });
-        });
-      }
-    } else {
-      // Si Paddle aún no carga, esperamos un poquito
-      setTimeout(initPaddle, 100);
     }
   }
 
-  // Iniciar el proceso
-  initPaddle();
+  // Ejecutar cuando el script y la página estén listos
+  window.addEventListener('load', initLemon);
 </script>
 
 <style>
+  /* Se mantiene tu estilo original que está excelente */
   .wiki-container { max-width: 1100px; margin: 3rem auto; padding: 0 1rem; display: flex; flex-direction: column; gap: 4rem; color: white; font-family: 'Inter', sans-serif; }
   .main-content { display: grid; grid-template-columns: 320px 1fr; gap: 3rem; align-items: start; }
   .poster-area img { width: 100%; border-radius: 15px; border: 3px solid #7c4dff; box-shadow: 0 0 25px rgba(124, 77, 255, 0.4); transition: transform 0.3s ease; }
