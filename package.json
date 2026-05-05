@@ -7,12 +7,14 @@
   },
   "scripts": {
   "dev": "astro dev",
-  "build": "astro build && echo '{}' > dist/server/wrangler.json",
+  "build": "astro build",
   "preview": "astro preview",
   "astro": "astro"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.3.1",
+    "@astrojs/netlify": "^7.0.8",
+    "@astrojs/vercel": "^10.0.6",
     "@supabase/supabase-js": "^2.105.3",
     "astro": "^6.2.2",
     "wrangler": "^4.87.0"
