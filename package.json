@@ -12,12 +12,9 @@
   "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.3.1",
     "@astrojs/netlify": "^7.0.8",
-    "@astrojs/vercel": "^10.0.6",
     "@supabase/supabase-js": "^2.105.3",
-    "astro": "^6.2.2",
-    "wrangler": "^4.87.0"
+    "astro": "^6.2.2"
   },
   "overrides": {
     "vite": "^7"
