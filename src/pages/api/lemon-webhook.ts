@@ -29,25 +29,20 @@ export const POST: APIRoute = async ({ request }) => {
     if (eventName === 'order_created') {
       const email = body.data.attributes.user_email;
       
-      // Forzamos el ID 2 manualmente para esta prueba y lo convertimos a número
-      const gameId = 2; 
+      console.log("TEST: Intentando agarrar la primera llave libre que exista...");
 
-      console.log("Intentando vender juego ID:", gameId);
-
+      // Quitamos el filtro de game_id solo para probar
       const { data: keyData, error: keyError } = await supabase
         .from('keys_inventory')
         .update({ is_sold: true })
-        .eq('game_id', gameId)
-        .eq('is_sold', false)
+        .eq('is_sold', false) // Solo buscamos que no esté vendida
         .select()
-        .maybeSingle(); // Esto es más flexible que .single()
+        .limit(1)
+        .maybeSingle();
 
       if (keyError || !keyData) {
-        return new Response(JSON.stringify({ 
-          error: "Sin stock", 
-          supabaseError: keyError,
-          intentadoConId: gameId 
-        }), { status: 200 });
+        console.error("ERROR REAL DE SUPABASE:", keyError);
+        return new Response(JSON.stringify({ error: "Sin stock real en tabla", detalle: keyError }), { status: 200 });
       }
 
       // --- 3. REGISTRO DE VENTA ---
