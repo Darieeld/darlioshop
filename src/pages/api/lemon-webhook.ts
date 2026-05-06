@@ -28,10 +28,12 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (eventName === 'order_created') {
       const email = body.data.attributes.user_email;
-      const gameId = Number(body.meta.custom_data?.game_id || 2);
-      const gameTitle = body.data.attributes.first_order_item.variant_name;
+      const rawGameId = body.meta.custom_data?.game_id || 2;
+      const gameId = Number(rawGameId);
+      
+      // ESTO APARECERÁ EN LOS LOGS DE NETLIFY
+      console.log(`Buscando llave para GameID: ${gameId} (Tipo: ${typeof gameId})`);
 
-      // --- 2. ESCUDO ANTI-DUPLICADOS (PASO 2 Y 3) ---
       const { data: keyData, error: keyError } = await supabase
         .from('keys_inventory')
         .update({ is_sold: true })
@@ -42,8 +44,8 @@ export const POST: APIRoute = async ({ request }) => {
         .single();
 
       if (keyError || !keyData) {
-        console.error("ERROR: No hay llaves disponibles para el juego ID:", gameId);
-        return new Response(JSON.stringify({ error: "Sin stock" }), { status: 200 });
+        console.error("DETALLE DEL ERROR DE SUPABASE:", keyError);
+        return new Response(JSON.stringify({ error: "Sin stock", debug: { searched_id: gameId } }), { status: 200 });
       }
 
       // --- 3. REGISTRO DE VENTA ---
