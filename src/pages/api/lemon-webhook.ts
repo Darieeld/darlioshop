@@ -28,24 +28,26 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (eventName === 'order_created') {
       const email = body.data.attributes.user_email;
-      const rawGameId = body.meta.custom_data?.game_id || 2;
-      const gameId = Number(rawGameId);
       
-      // ESTO APARECERÁ EN LOS LOGS DE NETLIFY
-      console.log(`Buscando llave para GameID: ${gameId} (Tipo: ${typeof gameId})`);
+      // Forzamos el ID 2 manualmente para esta prueba y lo convertimos a número
+      const gameId = 2; 
+
+      console.log("Intentando vender juego ID:", gameId);
 
       const { data: keyData, error: keyError } = await supabase
         .from('keys_inventory')
         .update({ is_sold: true })
         .eq('game_id', gameId)
         .eq('is_sold', false)
-        .select('*')
-        .limit(1)
-        .single();
+        .select()
+        .maybeSingle(); // Esto es más flexible que .single()
 
       if (keyError || !keyData) {
-        console.error("DETALLE DEL ERROR DE SUPABASE:", keyError);
-        return new Response(JSON.stringify({ error: "Sin stock", debug: { searched_id: gameId } }), { status: 200 });
+        return new Response(JSON.stringify({ 
+          error: "Sin stock", 
+          supabaseError: keyError,
+          intentadoConId: gameId 
+        }), { status: 200 });
       }
 
       // --- 3. REGISTRO DE VENTA ---
