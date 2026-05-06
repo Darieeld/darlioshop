@@ -28,7 +28,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (eventName === 'order_created') {
       const email = body.data.attributes.user_email;
-      const gameId = body.meta.custom_data?.game_id || 2; 
+      const gameId = Number(body.meta.custom_data?.game_id || 2);
       const gameTitle = body.data.attributes.first_order_item.variant_name;
 
       // --- 2. ESCUDO ANTI-DUPLICADOS (PASO 2 Y 3) ---
