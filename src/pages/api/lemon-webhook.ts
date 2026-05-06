@@ -3,9 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
 
+// USAR SERVICE_ROLE_KEY es vital para que Supabase te deje escribir sin errores
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY // <--- ¡Importante que el nombre coincida con Netlify!
 );
 
 const resend = new Resend(import.meta.env.RESEND_API_KEY);
@@ -13,13 +14,14 @@ const LEMON_WEBHOOK_SECRET = import.meta.env.LEMON_WEBHOOK_SECRET;
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    // --- 1. VALIDACIÓN DE SEGURIDAD (PASO 5) ---
     const rawBody = await request.text();
+    
+    // --- 1. VALIDACIÓN DE FIRMA ---
     const hmac = crypto.createHmac('sha256', LEMON_WEBHOOK_SECRET);
     const digest = Buffer.from(hmac.update(rawBody).digest('hex'), 'utf8');
     const signature = Buffer.from(request.headers.get('x-signature') || '', 'utf8');
 
-    if (!crypto.timingSafeEqual(digest, signature)) {
+    if (signature.length !== digest.length || !crypto.timingSafeEqual(digest, signature)) {
       return new Response('Firma inválida', { status: 401 });
     }
 
@@ -28,21 +30,25 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (eventName === 'order_created') {
       const email = body.data.attributes.user_email;
+      const gameName = body.data.attributes.first_order_item.product_name || "Juego";
       
-      console.log("TEST: Intentando agarrar la primera llave libre que exista...");
+      // Intentamos sacar el ID de custom_data, si no, usamos el 2 (Hollow Knight)
+      const gameId = Number(body.meta.custom_data?.game_id || 2);
 
-      // Quitamos el filtro de game_id solo para probar
+      console.log(`Procesando venta para: ${email}, Juego ID: ${gameId}`);
+
+      // --- 2. BUSCAR LLAVE EN SUPABASE ---
       const { data: keyData, error: keyError } = await supabase
         .from('keys_inventory')
         .update({ is_sold: true })
-        .eq('is_sold', false) // Solo buscamos que no esté vendida
+        .eq('game_id', gameId)
+        .eq('is_sold', false)
         .select()
-        .limit(1)
         .maybeSingle();
 
       if (keyError || !keyData) {
-        console.error("ERROR REAL DE SUPABASE:", keyError);
-        return new Response(JSON.stringify({ error: "Sin stock real en tabla", detalle: keyError }), { status: 200 });
+        console.error("Sin stock en Supabase:", keyError);
+        return new Response(JSON.stringify({ error: "Sin stock" }), { status: 200 });
       }
 
       // --- 3. REGISTRO DE VENTA ---
@@ -50,36 +56,33 @@ export const POST: APIRoute = async ({ request }) => {
         game_id: gameId,
         key_id: keyData.id,
         buyer_email: email,
-        sale_price: body.data.attributes.total / 100,
-        created_at: new Date()
+        sale_price: body.data.attributes.total / 100
       });
 
-      // --- 4. ENVÍO DE EMAIL CON RESEND (PASO 4) ---
-      try {
-        await resend.emails.send({
-          from: 'Darlioshop <onboarding@resend.dev>',
-          to: email,
-          subject: `¡Tu código de ${gameTitle} ha llegado!`,
-          html: `
-            <div style="font-family: sans-serif; padding: 20px; background-color: #111821; color: white; border-radius: 10px;">
-              <h1 style="color: #7c4dff;">¡Gracias por tu compra!</h1>
-              <p>Aquí tienes tu llave para <strong>${gameTitle}</strong>:</p>
-              <div style="background-color: #1c232d; padding: 20px; border: 2px solid #7c4dff; border-radius: 8px; text-align: center; margin: 20px 0;">
-                <h2 style="margin: 0; letter-spacing: 3px; color: #2de29d; font-family: monospace;">${keyData.key_code}</h2>
-              </div>
-              <p style="font-size: 0.8rem; color: #888;">Disfruta tu juego. Si tienes problemas, contáctanos.</p>
+      // --- 4. ENVÍO CON RESEND ---
+      const { error: mailError } = await resend.emails.send({
+        from: 'Tienda <onboarding@resend.dev>',
+        to: email,
+        subject: `Tu código de ${gameName}`,
+        html: `
+          <div style="font-family: sans-serif; background: #111; color: white; padding: 20px; border-radius: 10px;">
+            <h1 style="color: #7c4dff;">¡Gracias por tu compra!</h1>
+            <p>Tu código para <strong>${gameName}</strong> es:</p>
+            <div style="background: #222; padding: 15px; border: 1px solid #7c4dff; font-size: 1.5rem; text-align: center; color: #2de29d;">
+              ${keyData.key_code}
             </div>
-          `
-        });
-        console.log(`Email enviado con éxito a ${email}`);
-      } catch (mailError) {
-        console.error("Error al enviar el email:", mailError);
+          </div>
+        `
+      });
+
+      if (mailError) {
+        console.error("Error de Resend:", mailError);
       }
     }
 
-    return new Response(JSON.stringify({ message: "Éxito" }), { status: 200 });
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
   } catch (err) {
-    console.error("Error en Webhook:", err);
-    return new Response(JSON.stringify({ error: "Fallo interno" }), { status: 500 });
+    console.error("Error crítico:", err);
+    return new Response(JSON.stringify({ error: "Error interno" }), { status: 500 });
   }
 };
